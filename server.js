@@ -1,6 +1,8 @@
 //load express
 const express = require('express');
 //call express function
+const pokemon = require('./Models/pokemon');
+
 const app = express();
 //load the port for the server
 
@@ -8,19 +10,18 @@ const app = express();
 let PORT = 3000;
 console.log('Server test!')
 
-
+app.set('view engine', 'ejs');
+app.set('views', './Views')
 
 app.get('/', (req, res) => {
     res.send('Welcome to the pokemon app!');
 })
 
 
-
-app.get('/pokemons', (req, res) => {
-    res.send(pokemons);
+app.get('/pokemon', (req, res) => {
+    res.render('Index',{data: pokemon})
+    
 })
-//app.set(viewengine,View.ejs);
-//app.set()
 
 //listen out for the server
 app.listen(PORT,()=>{
