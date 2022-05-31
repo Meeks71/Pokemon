@@ -10,12 +10,17 @@ console.log('Server test!')
 
 
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the pokemon app!');
+})
 
 
 
-
-
-
+app.get('/pokemons', (req, res) => {
+    res.send(pokemons);
+})
+//app.set(viewengine,View.ejs);
+//app.set()
 
 //listen out for the server
 app.listen(PORT,()=>{
