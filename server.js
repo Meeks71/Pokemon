@@ -1,80 +1,88 @@
-//=======================Setup
+const express = require("express");
+const pokemonData = require("./Models/pokemon");
+require("dotenv").config(); // configuration for dotenv
+const mongoose = require("mongoose");
+const PokemonModel = require("./Models/PokemonModel");
 
-//load express
-const express = require('express');
-//call express function
-const pokemonData = require('./Models/pokemon');
-require('dotenv').config()
-
-const mongoose = require('mongoose')
-
+//* ========== SETUP
 const app = express();
-//load the port for the server
-
 const PORT = 3000;
-console.log('Server test!')
+app.set("view engine", "ejs");
+app.set("views", "./Views");
 
-app.set('view engine', 'ejs');
-app.set('views', './Views')
-//=========================middleware
-app.use(express.json())
-app.use(express.urlencoded({ extended: false}))
+//* ======== Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-//*============Route setup 
+//* ========== ROUTES
+app.get("/", (req, res) => {
+  res.send("Welcome to the Pokemon App!");
+});
 
-app.get('/', (req, res) => {
-    res.send('Welcome to the Pokemon App!');
-})
-//app.get ('/pokemon', (req, res) => {
- //   res.render(pokemonData);
-//})
+app.get("/pokemon", async (req, res) => {
+  try {
+    // fetch data from the db
+    const pokemons = await PokemonModel.find();
 
+    res.render("Index", {
+      pageTitle: "Pokemon",
+      pageHeader: "See All The Pokemon!",
+      pokemonData: pokemons,
+    });
+  } catch (error) {
+      console.log(error);
+  }
+});
 
-app.get('/pokemon', (req, res) => {
-    res.render('Index',{
-        pageTitle: 'Pokemon',
-        pageHeader: 'See all of the Pokemon!',
-        pokemondata: pokemonData
-    })
-    
-})
+app.get("/pokemon/new", (req, res) => {
+  res.render("New", {
+    pageTitle: "New Pokemon",
+    pageHeader: "Create a new Pokemon",
+  });
+});
 
-app.post('/pokemon', (req, res) => {
-    console.log(req.body)
-})
+//* POST REQUEST HANDLER
+app.post("/pokemon", async (req, res) => {
+  const newPokemon = req.body; // create a newPokemon variable
+  // add a img property to the object
+  newPokemon.img = `http://img.pokemondb.net/artwork/${req.body.name.toLowerCase()}`;
 
-app.get('/pokemon/new', (req, res) => {
-    res.render('new',{
-        pageTitle: 'New Pokemon',
-        pageHeader: 'Create a new Pokemon'
-    })
-})
+  console.log(newPokemon);
 
-///////////////////////////Post request
+  //* Save the new pokemon to the db
+  await PokemonModel.create(newPokemon, (error, result) => {
+    if (error) {
+      console.log(error);
+    }
+    res.redirect('/pokemon')
+    console.log(result);
+  });
 
+  // More stuff
+});
 
+app.get("/pokemon/:id", async (req, res) => {
+  try {
+      console.log(req.params.id)
+      const pokemon = await PokemonModel.findById(req.params.id)
+      console.log('POKEMON FOUND!', pokemon);
 
+    res.render("Show", {
+        pageTitle: "Details",
+        pageHeader: " Gotta Catch 'Em All ",
+        pokemon: pokemon,
+      });
 
-
-
-app.get('/pokemon/:id', (req, res) => {
-    res.render('Show', {
-        pageTitle: 'Details',
-        pageHeader: "Gotta catch them all",
-        pokemon: pokemonData
-    })
-})
-app.get('/pokemon/:id',(req, res) => {
-    //res.send(req.params.id);
-    const result = pokemon.filter(item=> item.id === Number(req.params.id))
-    res.render("Show", {pokemon: result[0]})
-})
+  } catch (error) {
+      console.log(error)
+  }
 
   
+});
 
-//========================================listen out for the server
-app.listen(PORT,() => {
-    console.log(`Server is listening on port: ${PORT})`)
-    mongoose.connect(process.env.MONGODB_URI)// Connects to MongoDB
-    console.log('MongoDB connected!')
-})
+//* =========== LISTENER
+app.listen(PORT, () => {
+  console.log(`Server is running on port: ${PORT}`);
+  mongoose.connect(process.env.MONGODB_URI); // CONNECTS TO MONGO DB
+  console.log("MongoDB connected!");
+});
